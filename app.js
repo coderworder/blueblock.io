@@ -1,12 +1,11 @@
-"use strict";
-
-const tabs = [...document.querySelectorAll(".tab")];
-const pages = [...document.querySelectorAll(".page")];
+const tabs = document.querySelectorAll(".tab");
+const pages = document.querySelectorAll(".page");
 const notifications = document.getElementById("notifications");
+
 const avatarImg = document.getElementById("avatar");
 const usernameSpan = document.getElementById("username");
-const obfCountSpan = document.getElementById("obfCount");
 const userGitCountSpan = document.getElementById("userGitCount");
+const obfCountSpan = document.getElementById("obfCount");
 
 const codeInput = document.getElementById("code-input");
 const codeOutput = document.getElementById("code-output");
@@ -35,14 +34,17 @@ let obfuscationCount = 0;
 let logs = [];
 
 function setActiveTab(tabName) {
-  tabs.forEach(t => t.classList.toggle("active", t.dataset.tab === tabName));
+  tabs.forEach(t => {
+    const active = t.dataset.tab === tabName;
+    t.classList.toggle("active", active);
+    t.setAttribute("aria-selected", active);
+    t.tabIndex = active ? 0 : -1;
+  });
   pages.forEach(p => p.classList.toggle("active", p.id === tabName));
 }
 
 tabs.forEach(tab => {
-  tab.addEventListener("click", () => {
-    setActiveTab(tab.dataset.tab);
-  });
+  tab.addEventListener("click", () => setActiveTab(tab.dataset.tab));
 });
 
 function notify(text) {
@@ -54,17 +56,16 @@ function notify(text) {
   setTimeout(() => {
     notif.style.opacity = "0";
     notif.style.transform = "translateX(100%)";
-    setTimeout(() => notifications.removeChild(notif), 500);
+    setTimeout(() => {
+      if (notifications.contains(notif)) notifications.removeChild(notif);
+    }, 500);
   }, 3000);
 
   notif.addEventListener("click", () => {
-    if (notifications.contains(notif)) {
-      notifications.removeChild(notif);
-    }
+    if (notifications.contains(notif)) notifications.removeChild(notif);
   });
 }
 
-// GitHub user fetch
 async function fetchGitHubUser(username = "octocat") {
   try {
     const res = await fetch(`https://api.github.com/users/${username}`);
@@ -82,21 +83,15 @@ async function fetchGitHubUser(username = "octocat") {
 
 fetchGitHubUser();
 
-// Obfuscator simulation
 function obfuscateCode(code, lang, opts) {
-  // Simulate obfuscation delay and output for demo purposes
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     setTimeout(() => {
-      let output = code
-        .split("")
-        .reverse()
-        .map((c) => {
-          if (opts.encryptStrings && /[a-zA-Z]/.test(c)) {
-            return String.fromCharCode(c.charCodeAt(0) + 1);
-          }
-          return c;
-        })
-        .join("");
+      let output = code.split("").reverse().map(c => {
+        if (opts.encryptStrings && /[a-zA-Z]/.test(c)) {
+          return String.fromCharCode(c.charCodeAt(0) + 1);
+        }
+        return c;
+      }).join("");
       if (opts.renameVars) output = output.toUpperCase();
       if (opts.junkCode) output += "\n-- junk code injected";
       if (opts.controlFlow) output = "-- control flow added\n" + output;
@@ -165,7 +160,6 @@ document.getElementById("clear-btn").addEventListener("click", () => {
   notify("Output cleared.");
 });
 
-// Logs
 function updateLogs() {
   logsList.innerHTML = "";
   if (!logs.length) {
@@ -187,7 +181,6 @@ clearLogsBtn.addEventListener("click", () => {
 
 updateLogs();
 
-// Theme handling
 const themes = {
   blue: {
     "--bg": "#01020a",
@@ -260,7 +253,6 @@ resetCustomBtn.addEventListener("click", () => {
 
 applyTheme("blue");
 
-// Keyboard shortcuts
 document.addEventListener("keydown", e => {
   if (!e.ctrlKey) return;
   switch (e.key) {
@@ -270,13 +262,11 @@ document.addEventListener("keydown", e => {
     case "4": setActiveTab("settings"); break;
     case "d":
     case "D":
-      // no dark mode toggle, always dark
       notify("Dark mode is always enabled.");
       break;
   }
 });
 
-// Prevent unwanted text selection on double-click
 document.body.addEventListener("mousedown", e => {
   if (e.target.classList.contains("tab")) e.preventDefault();
 });
