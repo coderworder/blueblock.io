@@ -248,7 +248,7 @@ body {
       <div class="logo">BB</div>
       <div>
         <h1>BlueBlock Pro</h1>
-        <p class="small muted">Roblox-inspired • Premium dark UI</p>
+        <p class="small muted">bluebooks or block idk lol</p>
       </div>
     </div>
 
@@ -475,4 +475,446 @@ body {
   </main>
 </div>
 
-<script
+<script>
+/* =========================
+   BlueBlock Pro — single-file script
+   - Tabs & animations
+   - Theme switching
+   - GitHub fetch for coderworder by default
+   - Obfuscation demo pipeline (client-side)
+   - Notifications, sounds, history
+   ========================= */
+
+/* Helpers */
+const $ = (s, root=document) => root.querySelector(s);
+const $$ = (s, root=document) => Array.from(root.querySelectorAll(s));
+const set = (k,v) => localStorage.setItem(k, JSON.stringify(v));
+const get = (k, def=null) => { try { return JSON.parse(localStorage.getItem(k)); } catch(e) { return def; } };
+
+/* Elements */
+const tabs = $$('#tabs .tab');
+const pages = $$('.page');
+const notifBtn = $('#notif-btn');
+const notifPanel = $('#notif-panel');
+const notifItems = $('#notif-items');
+const notifBadge = $('#notif-badge');
+
+const editorIn = $('#editor-in');
+const editorOut = $('#editor-out');
+const btnObfuscate = $('#btn-obfuscate');
+const spinner = $('#ob-spinner');
+const progressText = $('#progress-text');
+
+const langSel = $('#lang');
+const optStr = $('#opt-str');
+const optCF = $('#opt-cf');
+const optJunk = $('#opt-junk');
+const optVar = $('#opt-var');
+const strength = $('#strength');
+const strengthVal = $('#strength-val');
+
+const btnCopy = $('#btn-copy'), btnSave = $('#btn-save'), btnClear = $('#btn-clear');
+
+const themeTiles = $$('.theme-tile');
+const ghAvatar = $('#gh-avatar'), ghName = $('#gh-name'), ghLogin = $('#gh-login'), ghBio = $('#gh-bio'), ghLink = $('#gh-link');
+
+const settingsGhAvatar = $('#settings-gh-avatar'), settingsGhName = $('#settings-gh-name'), settingsGhLogin = $('#settings-gh-login'), settingsGhBio = $('#settings-gh-bio');
+
+const ghInput = $('#gh-username');
+const ghConnect = $('#gh-connect'), ghClear = $('#gh-clear');
+
+const prefSound = $('#pref-sound');
+const profName = $('#profile-name');
+
+const logsList = $('#logs-list');
+
+const openObf = $('#open-obf');
+const lastSync = $('#last-sync');
+const recentList = $('#recent-list');
+const statScripts = $('#stat-scripts');
+
+/* Local keys */
+const KEY_THEME = 'bb_theme_v2';
+const KEY_HISTORY = 'bb_history_v2';
+const KEY_GH = 'bb_gh_v2';
+const KEY_PREFS = 'bb_prefs_v2';
+const KEY_PROFILE = 'bb_profile_v2';
+
+/* init theme */
+const initialTheme = localStorage.getItem(KEY_THEME) || 'blue';
+document.documentElement.setAttribute('data-theme', initialTheme);
+themeTiles.forEach(t => {
+  t.classList.toggle('active', t.dataset.theme === initialTheme);
+  t.addEventListener('click', () => {
+    themeTiles.forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+    document.documentElement.setAttribute('data-theme', t.dataset.theme);
+    localStorage.setItem(KEY_THEME, t.dataset.theme);
+    play('switch');
+  });
+});
+
+/* Tabs */
+function activate(tabEl){
+  tabs.forEach(t => { t.classList.remove('active'); t.setAttribute('aria-selected', 'false'); });
+  pages.forEach(p => { p.classList.remove('active'); p.hidden = true; });
+
+  tabEl.classList.add('active');
+  tabEl.setAttribute('aria-selected','true');
+  const name = tabEl.dataset.tab;
+  const page = document.getElementById('page-' + name);
+  if(page){ page.classList.add('active'); page.hidden = false; page.scrollTop = 0; }
+  play('click');
+}
+tabs.forEach(t => t.addEventListener('click', ()=> activate(t)));
+
+// keyboard shortcuts Alt+1..4
+window.addEventListener('keydown', e => {
+  if(e.altKey && !e.ctrlKey && !e.metaKey && !e.shiftKey){
+    const n = Number(e.key);
+    if(n >=1 && n <= tabs.length) {
+      activate(tabs[n-1]);
+    }
+  }
+  // Ctrl/Cmd + Enter to obfuscate
+  if((e.ctrlKey || e.metaKey) && e.key === 'Enter'){ if(document.activeElement === editorIn || document.activeElement === editorOut) { obfuscate(); } }
+});
+
+/* Notifications */
+function notify(text, type='info'){
+  const el = document.createElement('div'); el.className = 'notif-item';
+  el.textContent = text;
+  if(type === 'success') el.style.color = 'var(--success)';
+  if(type === 'error') el.style.color = 'var(--danger)';
+  notifItems.prepend(el);
+  // badge
+  notifBadge.style.display = 'block';
+  setTimeout(()=> { if(el.parentNode) el.remove(); }, 8000);
+}
+notifBtn.addEventListener('click', e => {
+  const open = notifPanel.classList.toggle('visible');
+  notifPanel.setAttribute('aria-hidden', String(!open));
+});
+$('#clear-notifs') && $('#clear-notifs').addEventListener('click', ()=> { notifItems.innerHTML=''; notifBadge.style.display='none'; });
+
+/* GitHub fetch for coderworder by default */
+async function fetchGitHub(user){
+  try {
+    const res = await fetch('https://api.github.com/users/' + encodeURIComponent(user));
+    if(!res.ok) throw new Error('Not found');
+    return await res.json();
+  } catch(e){ throw e; }
+}
+
+/* apply profile to UI */
+async function loadProfile(user='coderworder'){
+  try{
+    const profile = await fetchGitHub(user);
+    $('#top-avatar').style.backgroundImage = `url(${profile.avatar_url})`;
+    $('#top-username').textContent = profile.name || profile.login || user;
+    ghAvatar.style.backgroundImage = `url(${profile.avatar_url})`;
+    settingsGhAvatar.style.backgroundImage = `url(${profile.avatar_url})`;
+    ghName.textContent = profile.name || profile.login;
+    ghLogin.textContent = '@' + profile.login;
+    ghBio.textContent = profile.bio || '';
+    settingsGhName.textContent = profile.name || profile.login;
+    settingsGhLogin.textContent = '@' + profile.login;
+    settingsGhBio.textContent = (profile.public_repos || 0) + ' repos • ' + (profile.followers || 0) + ' followers';
+    $('#gh-link') && $('#gh-link').setAttribute('href', profile.html_url);
+    $('#settings-gh-bio').textContent = profile.bio || '';
+    localStorage.setItem(KEY_GH, JSON.stringify({login:profile.login, avatar:profile.avatar_url, name:profile.name, bio:profile.bio}));
+    notify('Loaded GitHub profile: ' + profile.login, 'success');
+    lastSync.textContent = new Date().toLocaleString();
+  } catch(err){
+    notify('Failed to load GitHub: ' + (err.message||''), 'error');
+  }
+}
+
+/* load saved GH if present */
+(function(){
+  const saved = localStorage.getItem(KEY_GH);
+  if(saved){
+    try {
+      const p = JSON.parse(saved);
+      $('#top-avatar').style.backgroundImage = `url(${p.avatar})`;
+      $('#top-username').textContent = p.name || p.login;
+      ghAvatar.style.backgroundImage = `url(${p.avatar})`;
+      settingsGhAvatar.style.backgroundImage = `url(${p.avatar})`;
+      settingsGhName.textContent = p.name || p.login;
+      settingsGhLogin.textContent = '@' + (p.login || '');
+    } catch(e){ loadProfile('coderworder'); }
+  } else {
+    loadProfile('coderworder'); // default fetch
+  }
+})();
+
+/* Connect / Clear GH from settings */
+ghConnect.addEventListener('click', async () => {
+  const u = (ghInput.value||'').trim(); if(!u) return notify('Enter GitHub username','error');
+  await loadProfile(u);
+});
+ghClear.addEventListener('click', ()=>{
+  localStorage.removeItem(KEY_GH);
+  ghAvatar.style.backgroundImage = ''; settingsGhAvatar.style.backgroundImage = '';
+  settingsGhName.textContent = 'Not connected'; settingsGhLogin.textContent = '';
+  notify('Cleared GitHub connection', 'info');
+});
+
+/* preferences */
+const prefs = get(KEY_PREFS) || {sounds:true, confirmClear:true};
+prefSound.checked = prefs.sounds; $('#pref-confirm').checked = prefs.confirmClear;
+prefSound.addEventListener('change', ()=> { prefs.sounds = prefSound.checked; set(KEY_PREFS,prefs); });
+$('#pref-confirm').addEventListener('change', ()=> { prefs.confirmClear = $('#pref-confirm').checked; set(KEY_PREFS,prefs); });
+
+/* profile name save */
+profName.value = (get(KEY_PROFILE) || {}).displayName || '';
+profName.addEventListener('change', ()=> {
+  const v = profName.value.trim();
+  localStorage.setItem(KEY_PROFILE, JSON.stringify({displayName:v}));
+  if(v) $('#top-username').textContent = v;
+  notify('Profile name saved','success');
+});
+
+/* simple sound fx */
+const AudioCtx = window.AudioContext || window.webkitAudioContext;
+function play(type='click'){
+  if(!prefs.sounds) return;
+  if(!AudioCtx) return;
+  const ctx = new AudioCtx();
+  const o = ctx.createOscillator(); const g = ctx.createGain();
+  o.connect(g); g.connect(ctx.destination);
+  const now = ctx.currentTime;
+  switch(type){
+    case 'click': o.frequency.setValueAtTime(700, now); g.gain.setValueAtTime(0.06, now); g.gain.exponentialRampToValueAtTime(0.001, now+0.12); break;
+    case 'success': o.frequency.setValueAtTime(900, now); g.gain.setValueAtTime(0.08, now); g.gain.exponentialRampToValueAtTime(0.001, now+0.22); break;
+    case 'error': o.frequency.setValueAtTime(300, now); g.gain.setValueAtTime(0.12, now); g.gain.exponentialRampToValueAtTime(0.001, now+0.28); break;
+    case 'switch': o.frequency.setValueAtTime(1100, now); g.gain.setValueAtTime(0.05, now); g.gain.exponentialRampToValueAtTime(0.001, now+0.15); break;
+  }
+  o.type = 'sine'; o.start(now); o.stop(now+0.12);
+}
+
+/* history */
+let history = get(KEY_HISTORY) || [];
+function saveHistory(){ set(KEY_HISTORY, history); renderHistory(); }
+function addHistoryEntry(entry){
+  history.unshift(entry); if(history.length>100) history.length = 100; saveHistory(); notify('Saved to history','success'); play('success');
+}
+function renderHistory(){
+  logsList.innerHTML = '';
+  if(history.length===0){ logsList.innerHTML = '<div class="muted">No history yet.</div>'; return; }
+  history.forEach((h, idx) => {
+    const el = document.createElement('div'); el.className='history-item';
+    el.innerHTML = `<div style="flex:1"><strong>${h.lang.toUpperCase()} • ${new Date(h.time).toLocaleString()}</strong>
+      <div class="muted small">options: ${Object.keys(h.options).filter(k=>h.options[k] && k!=='strength').join(', ') || 'none'} • strength: ${h.options.strength}</div>
+      <details style="margin-top:8px;"><summary>Output snippet</summary><pre style="white-space:pre-wrap">${escapeHtml(h.output.slice(0,400))}...</pre></details></div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <button class="btn ghost" data-copy>Copy</button>
+        <button class="btn ghost" data-run>Re-run</button>
+      </div>`;
+    el.querySelector('[data-copy]').addEventListener('click', ()=> { navigator.clipboard.writeText(h.output); notify('Copied from history','success'); });
+    el.querySelector('[data-run]').addEventListener('click', ()=> { editorIn.value = h.input; activateTabByName('obfuscator'); });
+    logsList.appendChild(el);
+  });
+}
+renderHistory();
+
+/* util */
+function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
+
+/* Activate tab by name (helper) */
+function activateTabByName(name){
+  const t = tabs.find(x=>x.dataset.tab===name);
+  if(t) activate(t);
+}
+
+/* Open obfuscator quick */
+openObf && openObf.addEventListener('click', ()=> activateTabByName('obfuscator'));
+
+/* Strength display */
+strength.addEventListener('input', ()=> { strengthVal.textContent = strength.value; });
+
+/* Obfuscation demo pipeline (client-side; replace for production) */
+function variableRename(code){
+  const ids = new Set(); const re = /\b([a-zA-Z_][a-zA-Z0-9_]*)\b/g; let m;
+  const reserved = new Set(['function','if','then','else','end','local','return','for','while','do','true','false','nil','var','let','const','new','switch','case','break']);
+  while((m=re.exec(code))){ const n=m[1]; if(!reserved.has(n) && n.length>1) ids.add(n); }
+  const map = {}; const chars='abcdefghijklmnopqrstuvwxyz';
+  ids.forEach(n => { let r=''; for(let i=0;i<2+Math.floor(Math.random()*3);i++) r+= chars[Math.floor(Math.random()*chars.length)]; map[n]=r; });
+  let out = code; Object.entries(map).forEach(([a,b])=> out = out.replace(new RegExp('\\b'+a+'\\b','g'), b)); return out;
+}
+function stringEncrypt(code, lang){
+  return code.replace(/(["'`])(?:(?=(\\?))\2.)*?\1/g, (m)=> {
+    const s = m.slice(1,-1); const arr = Array.from(s).map(c=>c.charCodeAt(0));
+    if(lang==='js') return '(()=>{let s=\"\";['+arr.join(',')+'].forEach(c=>s+=String.fromCharCode(c));return s;})()';
+    return "((function() local s=''; local a={" + arr.join(',') + "} for i=1,#a do s = s .. string.char(a[i]) end return s end)())";
+  });
+}
+function controlFlowWrap(code, lang){
+  if(lang==='js') return `(()=>{let _pc=0;while(true){switch(_pc){case 0:${code}return;}}})();`;
+  return `do local _pc=1; ${code}; end`;
+}
+function junkInject(code, lang){
+  const junk = lang==='js' ? ['const _j=0;','// junk'] : ['local _j=0','-- junk'];
+  const lines = code.split('\\n'); for(let i=0;i<lines.length;i+=3) if(Math.random()>0.6) lines.splice(i,0,junk[Math.floor(Math.random()*junk.length)]);
+  return lines.join('\\n');
+}
+
+/* Main obfuscate workflow */
+async function obfuscate(){
+  const input = editorIn.value.trim();
+  if(!input){ notify('Paste code first','error'); return; }
+  // options
+  const options = { str: optStr.checked, cf: optCF.checked, junk: optJunk.checked, varr: optVar.checked, strength: Number(strength.value) || 5 };
+  btnObfuscateDisable(true);
+  progressText.textContent = 'Initializing...';
+  spinner.style.visibility = 'visible';
+
+  play('click');
+
+  // fake progressive steps with await
+  await sleep(300);
+  progressText.textContent = 'Preparing code';
+  await sleep(400);
+
+  let out = input;
+
+  if(options.varr){ out = variableRename(out); progressText.textContent = 'Renaming variables'; await sleep(350); }
+  if(options.str){ out = stringEncrypt(out, langSelValue()); progressText.textContent = 'Encrypting strings'; await sleep(450); }
+  if(options.cf){ out = controlFlowWrap(out, langSelValue()); progressText.textContent = 'Flattening control flow'; await sleep(550); }
+  if(options.junk){ out = junkInject(out, langSelValue()); progressText.textContent = 'Injecting junk'; await sleep(400); }
+
+  // repeat based on strength (light)
+  for(let i=1;i<options.strength;i++){
+    if(options.junk && Math.random()>0.5){ out = junkInject(out, langSelValue()); progressText.textContent = `Extra pass (${i})`; await sleep(180); }
+  }
+
+  out = `-- BlueBlock Pro (demo) • strength=${options.strength} --\\n` + out;
+
+  editorOut.value = out;
+  progressText.textContent = 'Complete';
+  spinner.style.visibility = 'hidden';
+  btnObfuscateDisable(false);
+  addHistoryEntry({ time: new Date().toISOString(), lang: langSelValue(), options, input, output: out });
+  renderHistory(); // update logs
+}
+
+/* small helpers */
+function sleep(ms){ return new Promise(r=>setTimeout(r, ms)); }
+function btnObfuscateDisable(v){ btnObfuscate.disabled = v; btnObfuscate.classList.toggle('busy', v); }
+
+/* bind obfuscate */
+btnObfuscate.addEventListener('click', obfuscate);
+
+/* copy/save/clear */
+btnCopy.addEventListener('click', async ()=> {
+  if(!editorOut.value) return notify('Nothing to copy','error');
+  try { await navigator.clipboard.writeText(editorOut.value); notify('Copied output','success'); } catch(e) { notify('Copy failed','error'); }
+});
+btnClear.addEventListener('click', ()=> {
+  if($('#pref-confirm').checked && !confirm('Clear input and output?')) return;
+  editorIn.value=''; editorOut.value=''; notify('Cleared editors','info');
+});
+btnSave.addEventListener('click', ()=> {
+  if(!editorOut.value) return notify('Nothing to save','error');
+  const blob = new Blob([editorOut.value], {type:'text/plain;charset=utf-8'});
+  const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = 'obfuscated.txt';
+  document.body.appendChild(link); link.click(); link.remove(); notify('Saved file','success');
+});
+
+/* render history into logs & sidebar recent */
+function renderHistory(){
+  renderHistoryList();
+  // sidebar recent
+  recentList.innerHTML = '';
+  if(history.length===0) recentList.textContent = 'No recent obfuscations.';
+  else {
+    const latest = history.slice(0,4);
+    latest.forEach(h => {
+      const el = document.createElement('div'); el.className='muted small';
+      el.innerHTML = `${new Date(h.time).toLocaleString()} • ${h.lang.toUpperCase()} • s=${h.options.strength}`;
+      recentList.appendChild(el);
+    });
+  }
+  statScripts.textContent = history.length;
+}
+renderHistory();
+
+/* renders logs list */
+function renderHistoryList(){
+  logsList.innerHTML = '';
+  if(history.length===0) { logsList.innerHTML = '<div class="muted">No history yet.</div>'; return; }
+  history.forEach(h => {
+    const wrap = document.createElement('div'); wrap.className='history-item';
+    wrap.innerHTML = `<div style="flex:1">
+      <div style="font-weight:700">${h.lang.toUpperCase()} • ${new Date(h.time).toLocaleString()}</div>
+      <div class="muted small">options: ${Object.keys(h.options).filter(k=>h.options[k] && k!=='strength').join(', ') || 'none'} • strength: ${h.options.strength}</div>
+      <details style="margin-top:8px;"><summary>Output snippet</summary><pre style="white-space:pre-wrap">${escapeHtml(h.output.slice(0,600))}</pre></details></div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <button class="btn ghost" data-copy>Copy</button>
+        <button class="btn ghost" data-run>Rerun</button>
+      </div>`;
+    wrap.querySelector('[data-copy]').addEventListener('click', ()=> { navigator.clipboard.writeText(h.output); notify('Copied output','success'); });
+    wrap.querySelector('[data-run]').addEventListener('click', ()=> { editorIn.value = h.input; activateTabByName('obfuscator'); });
+    logsList.appendChild(wrap);
+  });
+}
+
+/* activate by name helper used by rerun */
+function activateTabByName(name){
+  const el = tabs.find(t => t.dataset.tab === name);
+  if(el) activate(el);
+}
+
+/* initial bindings for open obf btn */
+openObf && openObf.addEventListener('click', ()=> activateTabByName('obfuscator'));
+
+/* renderHistory initially */
+renderHistory();
+
+/* small helper to get lang */
+function langSelValue(){ return langSel.value || 'lua'; }
+
+/* addHistoryEntry wrapper to save input/out */
+function addHistoryEntry(entry){
+  history.unshift(entry);
+  if(history.length>100) history.length = 100;
+  set(KEY_HISTORY, history); renderHistory();
+}
+
+/* load saved preferences */
+(function loadPrefs(){
+  const p = get(KEY_PREFS) || {sounds:true, confirmClear:true};
+  prefSound.checked = p.sounds;
+  $('#pref-confirm').checked = p.confirmClear;
+  const prof = get(KEY_PROFILE); if(prof && prof.displayName) { $('#top-username').textContent = prof.displayName; profName.value = prof.displayName; }
+})();
+
+/* GH connect from settings: */
+ghConnect.addEventListener('click', ()=> {
+  const u = (ghInput.value||'').trim(); if(!u) { notify('Enter username','error'); return; }
+  loadProfile(u);
+});
+ghClear.addEventListener('click', ()=> {
+  localStorage.removeItem(KEY_GH); notify('Cleared GH', 'info');
+  settingsGhAvatar.style.backgroundImage=''; settingsGhName.textContent='Not connected'; settingsGhLogin.textContent=''; settingsGhBio.textContent='';
+});
+
+/* helper escape */
+function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
+
+/* Save and persist some UI state on unload */
+window.addEventListener('beforeunload', ()=> {
+  set(KEY_PREFS, {sounds:prefSound.checked, confirmClear:$('#pref-confirm').checked});
+  set(KEY_PROFILE, {displayName: profName.value.trim()});
+});
+
+/* On first load set some UI defaults */
+(function firstRun(){
+  if(!localStorage.getItem(KEY_THEME)) localStorage.setItem(KEY_THEME, 'blue');
+  // quickly sync lastSync
+  lastSync.textContent = new Date().toLocaleString();
+})();
+
+</script>
+</body>
+</html>
