@@ -3,106 +3,43 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>BlueBlock Pro</title>
-<link rel="stylesheet" href="style.css" />
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600&display=swap" rel="stylesheet" />
+<title>BlueBlocks Pro</title>
+<style>
+  body {
+    margin: 0;
+    height: 100vh;
+    background: #0a1f44;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #fff;
+  }
+  .notification {
+    background: #163a7a;
+    padding: 2rem 3rem;
+    border-radius: 10px;
+    box-shadow: 0 0 15px #2858b6;
+    text-align: center;
+    max-width: 320px;
+  }
+  .notification h1 {
+    margin: 0 0 0.5rem 0;
+    font-size: 2rem;
+    letter-spacing: 1.2px;
+  }
+  .notification p {
+    margin: 0;
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #aac6ff;
+  }
+</style>
 </head>
 <body>
-<div id="app">
-  <header class="topbar">
-    <div class="logo">BlueBlock Pro</div>
-    <nav class="tabs">
-      <button class="tab active" data-tab="home">Home</button>
-      <button class="tab" data-tab="obfuscator">Obfuscator</button>
-      <button class="tab" data-tab="logs">Logs</button>
-      <button class="tab" data-tab="settings">Settings</button>
-    </nav>
-    <div class="profile" tabindex="0" aria-label="User Profile">
-      <img id="avatar" src="https://avatars.githubusercontent.com/u/583231?v=4" alt="User avatar" />
-      <span id="username">Loading...</span>
-    </div>
-  </header>
-
-  <main>
-    <section class="page active" id="home" aria-label="Home dashboard">
-      <h1>Welcome to BlueBlock Pro</h1>
-      <p>Powerful Lua and JS obfuscation at your fingertips.</p>
-      <p><em>“bluebooks?” — just a little joke.</em></p>
-      <div id="stats" class="stats">
-        <div class="stat"><span id="obfCount">0</span><br>Scripts Obfuscated</div>
-        <div class="stat"><span id="userGitCount">0</span><br>GitHub Repos</div>
-      </div>
-    </section>
-
-    <section class="page" id="obfuscator" aria-label="Obfuscator tool">
-      <h1>Obfuscator</h1>
-      <div class="input-area">
-        <textarea id="code-input" placeholder="Paste your Lua or JavaScript code here..." spellcheck="false" autocorrect="off" autocapitalize="off" autocomplete="off"></textarea>
-      </div>
-      <div class="options">
-        <label><input type="checkbox" id="encryptStrings" checked /> Encrypt Strings</label>
-        <label><input type="checkbox" id="controlFlow" checked /> Control Flow Flattening</label>
-        <label><input type="checkbox" id="junkCode" /> Junk Code Injection</label>
-        <label><input type="checkbox" id="renameVars" checked /> Aggressive Variable Renaming</label>
-        <select id="language-select" aria-label="Select language to obfuscate">
-          <option value="lua">Lua</option>
-          <option value="js">JavaScript</option>
-        </select>
-      </div>
-      <button id="obfuscate-btn">Obfuscate</button>
-      <div id="loading" class="loading hidden"></div>
-      <div class="output-area">
-        <textarea id="code-output" readonly placeholder="Obfuscated code will appear here..."></textarea>
-        <div class="output-actions">
-          <button id="copy-btn" aria-label="Copy output code">Copy</button>
-          <button id="save-btn" aria-label="Save output code">Save</button>
-          <button id="clear-btn" aria-label="Clear output">Clear</button>
-        </div>
-      </div>
-    </section>
-
-    <section class="page" id="logs" aria-label="Logs and history">
-      <h1>Obfuscation History</h1>
-      <ul id="logs-list" class="logs-list"></ul>
-      <button id="clear-logs-btn">Clear Logs</button>
-    </section>
-
-    <section class="page" id="settings" aria-label="Settings and themes">
-      <h1>Settings</h1>
-      <div class="theme-options">
-        <h2>Themes</h2>
-        <select id="theme-select" aria-label="Select theme">
-          <option value="blue">Blue (Default)</option>
-          <option value="ruby">Ruby</option>
-          <option value="amethyst">Amethyst</option>
-          <option value="ghastly">Ghastly</option>
-          <option value="custom">Custom</option>
-        </select>
-        <div id="custom-theme-controls" class="custom-theme hidden">
-          <label>Background: <input type="color" id="custom-bg" value="#000011" /></label>
-          <label>Primary: <input type="color" id="custom-primary" value="#00aaff" /></label>
-          <label>Accent: <input type="color" id="custom-accent" value="#00ffaa" /></label>
-          <label>Text: <input type="color" id="custom-text" value="#d0e8ff" /></label>
-          <button id="apply-custom-theme">Apply Custom Theme</button>
-          <button id="reset-custom-theme">Reset Custom Theme</button>
-        </div>
-      </div>
-      <div class="settings-info">
-        <p>Keyboard shortcuts:</p>
-        <ul>
-          <li><strong>Ctrl+1</strong> - Home</li>
-          <li><strong>Ctrl+2</strong> - Obfuscator</li>
-          <li><strong>Ctrl+3</strong> - Logs</li>
-          <li><strong>Ctrl+4</strong> - Settings</li>
-          <li><strong>Ctrl+D</strong> - Toggle Dark Mode (always dark here)</li>
-        </ul>
-      </div>
-    </section>
-  </main>
-
-  <aside id="notifications" aria-live="polite"></aside>
-</div>
-
-<script src="script.js"></script>
+  <div class="notification">
+    <h1>BlueBlocks Pro</h1>
+    <p>Undergoing Maintenance!</p>
+  </div>
 </body>
 </html>
