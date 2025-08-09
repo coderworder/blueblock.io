@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>BlueBlock Pro — Next-Gen Dark Obfuscator</title>
+
+  <!-- Google font -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+
+  <!-- Main stylesheet -->
+  <link rel="stylesheet" href="styles.css">
+
+  <!-- Meta for retina scaling -->
+  <meta name="color-scheme" content="dark">
+</head>
+<body>
+
+  <div id="app" role="application" aria-label="BlueBlock Pro interface">
+
+    <!-- TOP BAR -->
+    <header id="topbar" role="banner">
+      <div class="brand">
+        <h1 tabindex="0" id="site-title">BlueBlock Pro</h1>
+        <div class="subtitle" id="site-sub">Obfuscator • Dev Tools</div>
+      </div>
+
+      <div class="top-controls">
+        <!-- GitHub avatar / username (updated by JS when connected) -->
+        <div id="user-profile" aria-label="User profile">
+          <div class="avatar" id="top-avatar" role="img" aria-label="User avatar"></div>
+          <div class="username" id="top-username" tabindex="0">DevMaster</div>
+        </div>
+
+        <!-- Notifications -->
+        <div id="notifications" role="region" aria-label="Notifications">
+          <button id="notif-btn" aria-haspopup="true" aria-expanded="false" data-tooltip="View notifications">
+            <!-- bell icon -->
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 24c1.326 0 2.4-1.074 2.4-2.4h-4.8c0 1.326 1.074 2.4 2.4 2.4zm6-7.2v-6c0-3.3-2.16-6-5.4-6-3.24 0-5.4 2.7-5.4 6v6l-1.8 1.8v.6h15v-.6l-1.8-1.8z"/></svg>
+            <span class="notif-badge" id="notif-badge" aria-hidden="true"></span>
+          </button>
+
+          <div id="notifications-list" role="list" aria-label="Notifications list" hidden>
+            <h3>Notifications</h3>
+            <div id="notif-items"></div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- NAV TABS -->
+    <nav id="main-nav" role="tablist" aria-label="Main navigation">
+      <button role="tab" id="tab-home" aria-controls="page-home" aria-selected="true">Home</button>
+      <button role="tab" id="tab-obfuscator" aria-controls="page-obfuscator" aria-selected="false">Obfuscator</button>
+      <button role="tab" id="tab-settings" aria-controls="page-settings" aria-selected="false">Settings</button>
+      <button role="tab" id="tab-history" aria-controls="page-history" aria-selected="false">History</button>
+    </nav>
+
+    <!-- MAIN CONTENT -->
+    <main id="content-area">
+      <!-- HOME PAGE -->
+      <section id="page-home" class="page active" role="tabpanel" aria-labelledby="tab-home">
+        <header class="page-header">
+          <h2>Welcome</h2>
+          <p class="lead">A modern, fast, and polished obfuscation platform built for developers and creators.</p>
+        </header>
+
+        <div class="grid">
+          <div class="card">
+            <h3>Quick Stats</h3>
+            <div class="stat-row">
+              <div class="stat">
+                <div class="stat-value" id="stat-scripts">0</div>
+                <div class="stat-label">Scripts Obfuscated</div>
+              </div>
+              <div class="stat">
+                <div class="stat-value" id="stat-sessions">0</div>
+                <div class="stat-label">Active Sessions</div>
+              </div>
+              <div class="stat">
+                <div class="stat-value" id="stat-uptime">100%</div>
+                <div class="stat-label">Uptime</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3>Quick Actions</h3>
+            <div class="actions">
+              <button class="btn" id="quick-obfuscate">Open Obfuscator</button>
+              <button class="btn ghost" id="quick-settings">Open Settings</button>
+            </div>
+          </div>
+
+          <div class="card tall">
+            <h3>Latest Notifications</h3>
+            <div id="home-notifs" class="notif-list-compact"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- OBFUSCATOR PAGE -->
+      <section id="page-obfuscator" class="page" role="tabpanel" aria-labelledby="tab-obfuscator" hidden>
+        <header class="page-header">
+          <h2>Obfuscator</h2>
+          <p class="lead">Paste code, pick your options, and press <strong>Obfuscate</strong>.</p>
+        </header>
+
+        <div class="obf-controls">
+          <label for="language-select">Language</label>
+          <select id="language-select" aria-label="Choose language">
+            <option value="lua">Lua</option>
+            <option value="js">JavaScript</option>
+          </select>
+
+          <div class="right-controls">
+            <div class="option-inline" data-tooltip="Use strong string encryption for literals">
+              <input type="checkbox" id="str-encrypt" />
+              <label for="str-encrypt">String Encryption</label>
+            </div>
+            <div class="option-inline" data-tooltip="Obfuscate control flow">
+              <input type="checkbox" id="ctrl-flow" />
+              <label for="ctrl-flow">Control Flow</label>
+            </div>
+            <div class="option-inline" data-tooltip="Inject junk/no-op code">
+              <input type="checkbox" id="junk-code" />
+              <label for="junk-code">Junk Code</label>
+            </div>
+            <div class="option-inline" data-tooltip="Aggressive variable renaming">
+              <input type="checkbox" id="var-rename" />
+              <label for="var-rename">Var Rename</label>
+            </div>
+            <div class="option-inline range-inline" data-tooltip="Obfuscation strength (1-10)">
+              <label for="strength-range">Strength</label>
+              <input id="strength-range" type="range" min="1" max="10" step="1" value="5">
+              <span id="strength-val">5</span>
+            </div>
+          </div>
+        </div>
+
+        <textarea id="code-input" placeholder="Paste your Lua or JavaScript code here..." spellcheck="false" autocomplete="off"></textarea>
+
+        <div class="action-row">
+          <button class="btn primary" id="obfuscate-btn" aria-live="polite" aria-busy="false">Obfuscate
+            <span class="btn-spinner" aria-hidden="true"></span>
+          </button>
+
+          <div class="inline-controls">
+            <button class="btn ghost" id="download-btn" data-tooltip="Save obfuscated file">Save</button>
+            <button class="btn ghost" id="copy-btn" data-tooltip="Copy output">Copy</button>
+            <button class="btn ghost" id="clear-btn" data-tooltip="Clear editor">Clear</button>
+          </div>
+        </div>
+
+        <textarea id="code-output" placeholder="Obfuscated code will appear here..." readonly spellcheck="false"></textarea>
+
+      </section>
+
+      <!-- SETTINGS PAGE -->
+      <section id="page-settings" class="page" role="tabpanel" aria-labelledby="tab-settings" hidden>
+        <header class="page-header">
+          <h2>Settings & Themes</h2>
+          <p class="lead">Customize the UI, connect your GitHub profile, and configure preferences.</p>
+        </header>
+
+        <div class="grid settings-grid">
+
+          <!-- THEME SELECTOR -->
+          <div class="card">
+            <h3>Themes</h3>
+            <div class="theme-list">
+              <label><input type="radio" name="theme" value="blue" checked> Blue (default)</label>
+              <label><input type="radio" name="theme" value="ruby"> Ruby</label>
+              <label><input type="radio" name="theme" value="amethyst"> Amethyst</label>
+              <label><input type="radio" name="theme" value="ghastly"> Ghastly</label>
+            </div>
+            <p class="muted">Theme changes apply instantly across the UI.</p>
+          </div>
+
+          <!-- GITHUB CONNECT -->
+          <div class="card">
+            <h3>GitHub Integration</h3>
+
+            <div id="github-card">
+              <div class="gh-row">
+                <div id="gh-avatar" class="avatar-lg" aria-hidden="true"></div>
+                <div class="gh-details">
+                  <div id="gh-name">Not connected</div>
+                  <div id="gh-login" class="muted">Enter a GitHub username</div>
+                </div>
+              </div>
+
+              <div class="gh-actions">
+                <input id="gh-username-input" type="text" placeholder="github username (e.g. octocat)">
+                <button class="btn" id="gh-fetch">Connect</button>
+                <button class="btn ghost" id="gh-clear">Clear</button>
+              </div>
+
+              <div id="gh-info" class="muted small"></div>
+            </div>
+
+            <p class="muted small">Client-side only: public GitHub profile fetch. For full OAuth (and higher rate limits), a backend is required.</p>
+          </div>
+
+          <!-- PROFILE & SOUNDS -->
+          <div class="card">
+            <h3>Profile & Sound</h3>
+            <p class="muted">Control subtle UI sounds and quick profile settings.</p>
+            <div class="option">
+              <input type="checkbox" id="sound-toggle" checked>
+              <label for="sound-toggle">Enable sound effects</label>
+            </div>
+            <div class="option">
+              <label for="username-edit">Display name</label>
+              <input id="username-edit" type="text" placeholder="Display name (top bar)">
+            </div>
+            <div class="muted small">Changes persist in localStorage.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- HISTORY PAGE -->
+      <section id="page-history" class="page" role="tabpanel" aria-labelledby="tab-history" hidden>
+        <header class="page-header">
+          <h2>History</h2>
+          <p class="lead">Past obfuscations are stored locally — quick review, copy, or re-run.</p>
+        </header>
+
+        <div id="history-list" class="history-list">
+          <div class="muted">No history yet.</div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Main script -->
+  <script src="app.js" defer></script>
+</body>
+</html>
